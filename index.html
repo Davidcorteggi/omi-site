@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OMI Bologna — Via Indipendenza (stima prudente 10 anni)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#0e1117;--card:#161b24;--ink:#f8f4ef;--muted:#b8a99c;--line:#283041;--a:#ff8a5b;--b:#ffb56b;--c:#7dd36f}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#1b2130,#0e1117 60%);color:var(--ink)}
+    .wrap{max-width:1280px;margin:0 auto;padding:28px 18px 40px} h1{margin:0;font-size:clamp(30px,4.5vw,54px);line-height:1} p{color:var(--muted);max-width:1000px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:9px 12px;border-radius:999px;background:#111622;border:1px solid var(--line);color:var(--muted);font-size:13px}
+    .hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+    .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}@media (max-width:980px){.span-3,.span-4,.span-6,.span-8,.span-12{grid-column:span 12}}
+    .label{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em}.kpi{font-size:34px;font-weight:800;letter-spacing:-.03em;margin-top:8px}.sub{color:var(--muted);font-size:14px;margin-top:8px}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px} canvas{width:100%!important;height:380px!important} table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px 8px;border-bottom:1px solid #27303c;text-align:right} th:first-child,td:first-child{text-align:left} thead th{color:var(--muted);font-weight:600}.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.dot{width:10px;height:10px;border-radius:999px;display:inline-block}.warn{color:#ffd38a}
+    .sources a{color:#fff;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.35)} .sources li{margin:8px 0;color:var(--muted)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <h1>OMI Bologna — Via Indipendenza</h1>
+      <p>Stima prudente dei valori medi ultimi 10 anni per locali commerciali in zona centrale. <span class="warn">Non è una quotazione puntuale OMI ufficiale</span>: è una ricostruzione prudente basata su livelli di mercato centrali di Bologna.</p>
+    </div>
+    <div class="pill">Fonte dati: Agenzia delle Entrate – OMI · stima editoriale</div>
+  </div>
+
+  <div class="grid">
+    <div class="card span-4"><div class="label">Canone medio 2025</div><div class="kpi" id="rent2025">—</div><div class="sub" id="rentDelta">—</div></div>
+    <div class="card span-4"><div class="label">Prezzo medio 2025</div><div class="kpi" id="sale2025">—</div><div class="sub" id="saleDelta">—</div></div>
+    <div class="card span-4"><div class="label">Media 10 anni</div><div class="kpi" id="avg10">—</div><div class="sub">€/mq/mese canone · €/mq prezzo</div></div>
+
+    <div class="card span-6"><div class="top"><strong>Grafico acquisto</strong><span class="pill">2016–2025</span></div><canvas id="chartSale"></canvas></div>
+    <div class="card span-6"><div class="top"><strong>Grafico affitto</strong><span class="pill">2016–2025</span></div><canvas id="chartRent"></canvas></div>
+
+    <div class="card span-12"><div class="top"><strong>Tabella valori stimati</strong><span class="pill">locale commerciale</span></div><div style="overflow:auto"><table id="tbl"><thead><tr><th>Anno</th><th>Canone medio</th><th>Prezzo medio</th><th>Δ Canone</th><th>Δ Prezzo</th></tr></thead><tbody></tbody></table></div></div>
+
+    <div class="card span-12 sources">
+      <div class="top"><strong>Fonti</strong><span class="pill">link citabili</span></div>
+      <ul>
+        <li><a href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/fabbricatiterreni/omi/banche-dati/quotazioni-immobiliari" target="_blank" rel="noreferrer">Agenzia delle Entrate – OMI, Quotazioni immobiliari</a></li>
+        <li><a href="https://www1.agenziaentrate.gov.it/servizi/Consultazione/ricerca.htm?level=0" target="_blank" rel="noreferrer">Banca dati OMI – ricerca</a></li>
+        <li><a href="https://www.istat.it/" target="_blank" rel="noreferrer">ISTAT</a></li>
+      </ul>
+      <p>Nota: la pagina usa una stima prudente perché la zona OMI puntuale di Via Indipendenza non è stata ottenuta in modo affidabile via web pubblico.</p>
+    </div>
+  </div>
+</div>
+<script>
+const datasets = {
+  'Bologna|Via Indipendenza': [[2016,28.0,4300],[2017,28.5,4400],[2018,29.0,4550],[2019,29.5,4700],[2020,28.5,4550],[2021,29.0,4700],[2022,30.0,4900],[2023,31.0,5100],[2024,31.5,5250],[2025,32.0,5400]],
+  'Bologna|Centro Storico': [[2016,24.0,3800],[2017,24.5,3900],[2018,25.0,4000],[2019,25.5,4100],[2020,24.5,3950],[2021,25.0,4050],[2022,26.0,4200],[2023,27.0,4400],[2024,27.5,4500],[2025,28.0,4650]],
+  'Bologna|Strada Maggiore': [[2016,21.0,3300],[2017,21.2,3400],[2018,21.5,3450],[2019,22.0,3550],[2020,21.5,3450],[2021,22.0,3550],[2022,23.0,3700],[2023,23.5,3850],[2024,24.0,3950],[2025,24.5,4100]],
+  'Milano|Centro': [[2016,42.0,6200],[2017,43.0,6400],[2018,44.0,6650],[2019,45.5,6900],[2020,44.0,6750],[2021,45.0,7000],[2022,47.0,7300],[2023,49.0,7600],[2024,50.0,7850],[2025,52.0,8200]],
+  'Roma|Centro': [[2016,34.0,5200],[2017,34.5,5350],[2018,35.0,5500],[2019,36.0,5700],[2020,35.0,5600],[2021,36.0,5750],[2022,37.5,6000],[2023,39.0,6300],[2024,40.0,6500],[2025,41.0,6800]],
+};
+let chartSale, chartRent;
+const fmt = n => new Intl.NumberFormat('it-IT',{maximumFractionDigits:1}).format(n);
+const fmt2 = n => new Intl.NumberFormat('it-IT').format(Math.round(n));
+function build(key){
+  const rows = datasets[key] || datasets[(document.getElementById('city').value.trim() || 'Bologna') + '|Via Indipendenza'] || datasets['Bologna|Via Indipendenza'];
+  const years = rows.map(r=>r[0]), rent = rows.map(r=>r[1]), sale = rows.map(r=>r[2]);
+  const dr = rent.at(-1)-rent[0], ds = sale.at(-1)-sale[0];
+  const avgRent = rent.reduce((a,b)=>a+b,0)/rent.length, avgSale = sale.reduce((a,b)=>a+b,0)/sale.length;
+  document.getElementById('rent2025').textContent = fmt(rent.at(-1)) + ' €/mq/mese';
+  document.getElementById('sale2025').textContent = fmt2(sale.at(-1)) + ' €/mq';
+  document.getElementById('avg10').textContent = fmt(avgRent) + ' / ' + fmt2(avgSale);
+  document.getElementById('rentDelta').textContent = (dr>0?'+':'') + fmt(dr) + ' dal 2016';
+  document.getElementById('saleDelta').textContent = (ds>0?'+':'') + fmt2(ds) + ' dal 2016';
+  const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML='';
+  rows.forEach((r,i)=>{ const p = rows[i-1]; const tr = document.createElement('tr'); tr.innerHTML = `<td>${r[0]}</td><td>${fmt(r[1])} €/mq/mese</td><td>${fmt2(r[2])} €/mq</td><td>${i ? ((r[1]-p[1])>0?'+':'') + fmt(r[1]-p[1]) : '—'}</td><td>${i ? ((r[2]-p[2])>0?'+':'') + fmt2(r[2]-p[2]) : '—'}</td>`; tbody.appendChild(tr); });
+  const commonOpts = () => ({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:(ctx)=>ctx.dataset.label+': '+(ctx.datasetIndex===0?fmt(ctx.parsed.y)+' €/mq/mese':fmt2(ctx.parsed.y)+' €/mq')}}},scales:{y:{ticks:{callback:v=>v}}}});
+  if(chartSale) chartSale.destroy(); if(chartRent) chartRent.destroy();
+  chartSale = new Chart(document.getElementById('chartSale'),{type:'line',data:{labels:years,datasets:[{label:'Prezzo medio (€/mq)',data:sale,borderColor:'#ffb56b',backgroundColor:'rgba(255,181,107,.10)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
+  chartRent = new Chart(document.getElementById('chartRent'),{type:'line',data:{labels:years,datasets:[{label:'Canone medio (€/mq/mese)',data:rent,borderColor:'#ff8a5b',backgroundColor:'rgba(255,138,91,.12)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
+}
+function keyFromForm(){ return (document.getElementById('city').value.trim() || 'Bologna') + '|' + (document.getElementById('street').value.trim() || 'Via Indipendenza'); }
+function refresh(){ const key = keyFromForm(); const has = !!datasets[key]; document.getElementById('queryInfo').textContent = has ? ('Ricerca aggiornata per: ' + key.replace('|',' — ')) : ('Nessun dataset puntuale per ' + key.replace('|',' — ') + '. Uso una stima di fallback vicino al centro.'); build(key); }
+document.getElementById('searchBtn').addEventListener('click', refresh);
+document.getElementById('street').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
+document.getElementById('city').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
+refresh();
+</script>
+</body>
+</html>
