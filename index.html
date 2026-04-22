@@ -4,91 +4,46 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>OMI — ricerca città e via</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
-    :root{--bg:#0e1117;--card:#161b24;--ink:#f8f4ef;--muted:#b8a99c;--line:#283041;--a:#ff8a5b;--b:#ffb56b}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#1b2130,#0e1117 60%);color:var(--ink)}
-    .wrap{max-width:1280px;margin:0 auto;padding:28px 18px 40px} h1{margin:0;font-size:clamp(30px,4.5vw,54px);line-height:1} p{color:var(--muted);max-width:1000px}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:9px 12px;border-radius:999px;background:#111622;border:1px solid var(--line);color:var(--muted);font-size:13px}
-    .hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.28)}
-    .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-12{grid-column:span 12}@media (max-width:980px){.span-3,.span-4,.span-6,.span-12{grid-column:span 12}}
-    .label{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em}.kpi{font-size:34px;font-weight:800;letter-spacing:-.03em;margin-top:8px}.sub{color:var(--muted);font-size:14px;margin-top:8px}
-    .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px} canvas{width:100%!important;height:380px!important} table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{padding:10px 8px;border-bottom:1px solid #27303c;text-align:right} th:first-child,td:first-child{text-align:left} thead th{color:var(--muted);font-weight:600}
-    .sources a{color:#fff;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.35)} .sources li{margin:8px 0;color:var(--muted)} .warn{color:#ffd38a}
-    input,button{font:inherit} input{padding:10px 12px;border-radius:12px;border:1px solid #2a3242;background:#0f1420;color:#fff;min-width:220px} button{padding:10px 14px;border:0;border-radius:12px;background:#ff8a5b;color:#111;font-weight:700;cursor:pointer}
+    body{margin:0;font-family:system-ui;background:#0e1117;color:#f8f4ef}.wrap{max-width:1100px;margin:0 auto;padding:24px}.card{background:#161b24;border:1px solid #283041;border-radius:18px;padding:16px;margin:14px 0}input,button,select{padding:10px;border-radius:10px;border:1px solid #334;font:inherit}button{background:#ff8a5b;border:0;font-weight:700}.muted{color:#b8a99c}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.pill{background:#111622;border:1px solid #283041;border-radius:999px;padding:6px 10px;display:inline-block}
+    table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #27303c;padding:8px;text-align:right}th:first-child,td:first-child{text-align:left}
+    a{color:#fff}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="hero">
-    <div>
-      <h1>OMI — ricerca città e via</h1>
-      <p>Inserisci città e via: il sito manda una query live al backend e mostra il risultato con fonti online citate. <span class="warn">Se il dato puntuale non è disponibile, mostra fallback prudente.</span></p>
+  <h1>OMI — ricerca città e via</h1>
+  <div class="card">
+    <div class="row">
+      <input id="city" value="Bologna" placeholder="Comune"/>
+      <input id="street" value="Via Indipendenza" placeholder="Via"/>
+      <select id="utilizzo"><option>Commerciale</option><option>Residenziale</option><option>Terziaria</option><option>Produttiva</option></select>
+      <button id="go">Cerca</button>
     </div>
-    <div class="pill">Fonti: OMI / Agenzia delle Entrate · ISTAT · altre fonti pubbliche online</div>
+    <div id="status" class="muted" style="margin-top:10px">Pronto.</div>
   </div>
-
-  <div class="card" style="margin-bottom:14px">
-    <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <label>Comune <input id="city" type="text" value="Bologna" placeholder="Bologna"></label>
-      <label>Via <input id="street" type="text" value="Via Indipendenza" placeholder="Via Indipendenza" style="min-width:min(360px,70vw)"></label>
-      <button id="searchBtn">Aggiorna</button>
-    </div>
-    <div id="queryInfo" class="sub" style="margin-top:10px">Pronto.</div>
-  </div>
-
-  <div class="grid">
-    <div class="card span-4"><div class="label">Canone medio 2025</div><div class="kpi" id="rent2025">—</div><div class="sub" id="rentDelta">—</div></div>
-    <div class="card span-4"><div class="label">Prezzo medio 2025</div><div class="kpi" id="sale2025">—</div><div class="sub" id="saleDelta">—</div></div>
-    <div class="card span-4"><div class="label">Media 10 anni</div><div class="kpi" id="avg10">—</div><div class="sub">€/mq/mese canone · €/mq prezzo</div></div>
-
-    <div class="card span-6"><div class="top"><strong>Grafico acquisto</strong><span class="pill">2016–2025</span></div><canvas id="chartSale"></canvas></div>
-    <div class="card span-6"><div class="top"><strong>Grafico affitto</strong><span class="pill">2016–2025</span></div><canvas id="chartRent"></canvas></div>
-
-    <div class="card span-12"><div class="top"><strong>Tabella valori stimati</strong><span class="pill">locale commerciale</span></div><div style="overflow:auto"><table id="tbl"><thead><tr><th>Anno</th><th>Canone medio</th><th>Prezzo medio</th><th>Δ Canone</th><th>Δ Prezzo</th></tr></thead><tbody></tbody></table></div></div>
-
-    <div class="card span-12 sources">
-      <div class="top"><strong>Fonti</strong><span class="pill">link citabili</span></div>
-      <ul id="sourcesList"></ul>
-      <p>Nota: il backend restituisce le fonti online insieme al risultato della query.</p>
+  <div class="card">
+    <div id="meta" class="pill">—</div>
+    <div style="overflow:auto;margin-top:10px">
+      <table><thead><tr><th>Tipologia</th><th>Stato</th><th>Compra min</th><th>Compra max</th><th>Loc min</th><th>Loc max</th></tr></thead><tbody id="tbody"></tbody></table>
     </div>
   </div>
+  <div class="card"><ul id="sources"></ul></div>
 </div>
 <script>
-let chartSale, chartRent;
-const fmt = n => new Intl.NumberFormat('it-IT',{maximumFractionDigits:1}).format(n);
-const fmt2 = n => new Intl.NumberFormat('it-IT').format(Math.round(n));
-async function refresh(){
-  const city = document.getElementById('city').value.trim() || 'Bologna';
-  const street = document.getElementById('street').value.trim() || 'Via Indipendenza';
-  document.getElementById('queryInfo').textContent = 'Ricerca in corso per: ' + city + ' — ' + street;
-  const res = await fetch(`/api/omi?city=${encodeURIComponent(city)}&street=${encodeURIComponent(street)}`);
-  const data = await res.json();
-  const rows = data.result.rows;
-  const years = rows.map(r=>r[0]), rent = rows.map(r=>r[1]), sale = rows.map(r=>r[2]);
-  const dr = rent.at(-1)-rent[0], ds = sale.at(-1)-sale[0];
-  const avgRent = rent.reduce((a,b)=>a+b,0)/rent.length, avgSale = sale.reduce((a,b)=>a+b,0)/sale.length;
-  document.getElementById('rent2025').textContent = fmt(data.result.rent2025) + ' €/mq/mese';
-  document.getElementById('sale2025').textContent = fmt2(data.result.sale2025) + ' €/mq';
-  document.getElementById('avg10').textContent = fmt(avgRent) + ' / ' + fmt2(avgSale);
-  document.getElementById('rentDelta').textContent = (dr>0?'+':'') + fmt(dr) + ' dal 2016';
-  document.getElementById('saleDelta').textContent = (ds>0?'+':'') + fmt2(ds) + ' dal 2016';
-  const tbody = document.querySelector('#tbl tbody'); tbody.innerHTML='';
-  rows.forEach((r,i)=>{ const p = rows[i-1]; const tr = document.createElement('tr'); tr.innerHTML = `<td>${r[0]}</td><td>${fmt(r[1])} €/mq/mese</td><td>${fmt2(r[2])} €/mq</td><td>${i ? ((r[1]-p[1])>0?'+':'') + fmt(r[1]-p[1]) : '—'}</td><td>${i ? ((r[2]-p[2])>0?'+':'') + fmt2(r[2]-p[2]) : '—'}</td>`; tbody.appendChild(tr); });
-  const commonOpts = () => ({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:(ctx)=>ctx.dataset.label+': '+(ctx.datasetIndex===0?fmt(ctx.parsed.y)+' €/mq/mese':fmt2(ctx.parsed.y)+' €/mq')}}},scales:{y:{ticks:{callback:v=>v}}}});
-  if(chartSale) chartSale.destroy(); if(chartRent) chartRent.destroy();
-  chartSale = new Chart(document.getElementById('chartSale'),{type:'line',data:{labels:years,datasets:[{label:'Prezzo medio (€/mq)',data:sale,borderColor:'#ffb56b',backgroundColor:'rgba(255,181,107,.10)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
-  chartRent = new Chart(document.getElementById('chartRent'),{type:'line',data:{labels:years,datasets:[{label:'Canone medio (€/mq/mese)',data:rent,borderColor:'#ff8a5b',backgroundColor:'rgba(255,138,91,.12)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
-  const src = document.getElementById('sourcesList'); src.innerHTML='';
-  data.sources.forEach(s => { const li = document.createElement('li'); li.innerHTML = `<a href="${s.url}" target="_blank" rel="noreferrer">${s.name}</a>`; src.appendChild(li); });
-  document.getElementById('queryInfo').textContent = `Risultato per: ${data.query.city} — ${data.query.street} · ${data.result.note}`;
+const $=id=>document.getElementById(id);
+async function go(){
+  $('status').textContent='Ricerca...';
+  const u=`/api/omi?city=${encodeURIComponent($('city').value)}&street=${encodeURIComponent($('street').value)}&utilizzo=${encodeURIComponent($('utilizzo').value)}`;
+  const r=await fetch(u);
+  const j=await r.json();
+  if(!r.ok){ $('status').textContent=j.error||'Errore'; return; }
+  $('status').textContent='OK';
+  $('meta').textContent=`${j.query.city} · ${j.query.zona} · ${j.query.semestre} · ${j.query.utilizzo}`;
+  $('tbody').innerHTML=j.rows.map(x=>`<tr><td>${x.tipologia}</td><td>${x.stato}</td><td>${x.compraMin}</td><td>${x.compraMax}</td><td>${x.locMin}</td><td>${x.locMax}</td></tr>`).join('');
+  $('sources').innerHTML=j.sources.map(s=>`<li><a target="_blank" rel="noreferrer" href="${s.url}">${s.name}</a></li>`).join('');
 }
-document.getElementById('searchBtn').addEventListener('click', refresh);
-document.getElementById('street').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
-document.getElementById('city').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
-refresh();
+$('go').onclick=go; go();
 </script>
 </body>
 </html>
