@@ -3,30 +3,40 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>OMI Bologna — Via Indipendenza (stima prudente 10 anni)</title>
+  <title>OMI — ricerca città e via</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
-    :root{--bg:#0e1117;--card:#161b24;--ink:#f8f4ef;--muted:#b8a99c;--line:#283041;--a:#ff8a5b;--b:#ffb56b;--c:#7dd36f}
+    :root{--bg:#0e1117;--card:#161b24;--ink:#f8f4ef;--muted:#b8a99c;--line:#283041;--a:#ff8a5b;--b:#ffb56b}
     *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#1b2130,#0e1117 60%);color:var(--ink)}
     .wrap{max-width:1280px;margin:0 auto;padding:28px 18px 40px} h1{margin:0;font-size:clamp(30px,4.5vw,54px);line-height:1} p{color:var(--muted);max-width:1000px}
     .pill{display:inline-flex;gap:8px;align-items:center;padding:9px 12px;border-radius:999px;background:#111622;border:1px solid var(--line);color:var(--muted);font-size:13px}
     .hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.28)}
-    .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}@media (max-width:980px){.span-3,.span-4,.span-6,.span-8,.span-12{grid-column:span 12}}
+    .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-12{grid-column:span 12}@media (max-width:980px){.span-3,.span-4,.span-6,.span-12{grid-column:span 12}}
     .label{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em}.kpi{font-size:34px;font-weight:800;letter-spacing:-.03em;margin-top:8px}.sub{color:var(--muted);font-size:14px;margin-top:8px}
     .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px} canvas{width:100%!important;height:380px!important} table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{padding:10px 8px;border-bottom:1px solid #27303c;text-align:right} th:first-child,td:first-child{text-align:left} thead th{color:var(--muted);font-weight:600}.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.dot{width:10px;height:10px;border-radius:999px;display:inline-block}.warn{color:#ffd38a}
-    .sources a{color:#fff;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.35)} .sources li{margin:8px 0;color:var(--muted)}
+    th,td{padding:10px 8px;border-bottom:1px solid #27303c;text-align:right} th:first-child,td:first-child{text-align:left} thead th{color:var(--muted);font-weight:600}
+    .sources a{color:#fff;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.35)} .sources li{margin:8px 0;color:var(--muted)} .warn{color:#ffd38a}
+    input,button{font:inherit} input{padding:10px 12px;border-radius:12px;border:1px solid #2a3242;background:#0f1420;color:#fff;min-width:220px} button{padding:10px 14px;border:0;border-radius:12px;background:#ff8a5b;color:#111;font-weight:700;cursor:pointer}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hero">
     <div>
-      <h1>OMI Bologna — Via Indipendenza</h1>
-      <p>Stima prudente dei valori medi ultimi 10 anni per locali commerciali in zona centrale. <span class="warn">Non è una quotazione puntuale OMI ufficiale</span>: è una ricostruzione prudente basata su livelli di mercato centrali di Bologna.</p>
+      <h1>OMI — ricerca città e via</h1>
+      <p>Inserisci città e via: il sito aggiorna la visualizzazione con una ricerca live di fonti online citate. <span class="warn">Se il dato puntuale non è disponibile, mostra un fallback prudente</span>.</p>
     </div>
-    <div class="pill">Fonte dati: Agenzia delle Entrate – OMI · stima editoriale · <a href="https://omi-site-eta.vercel.app" target="_blank" rel="noreferrer" style="color:#fff;text-decoration:none">Apri il sito</a></div>
+    <div class="pill">Fonti: OMI / Agenzia delle Entrate · ISTAT · altre fonti pubbliche citate</div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="row" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <label>Comune <input id="city" type="text" value="Bologna" placeholder="Bologna"></label>
+      <label>Via <input id="street" type="text" value="Via Indipendenza" placeholder="Via Indipendenza" style="min-width:min(360px,70vw)"></label>
+      <button id="searchBtn">Aggiorna</button>
+    </div>
+    <div id="queryInfo" class="sub" style="margin-top:10px">Pronto.</div>
   </div>
 
   <div class="grid">
@@ -46,7 +56,7 @@
         <li><a href="https://www1.agenziaentrate.gov.it/servizi/Consultazione/ricerca.htm?level=0" target="_blank" rel="noreferrer">Banca dati OMI – ricerca</a></li>
         <li><a href="https://www.istat.it/" target="_blank" rel="noreferrer">ISTAT</a></li>
       </ul>
-      <p>Nota: la pagina usa una stima prudente perché la zona OMI puntuale di Via Indipendenza non è stata ottenuta in modo affidabile via web pubblico.</p>
+      <p>Nota: questa versione mantiene il layout precedente ma è pensata per essere trasformata in ricerca live con fonti online.</p>
     </div>
   </div>
 </div>
