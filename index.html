@@ -51,31 +51,27 @@
 
     <div class="card span-12 sources">
       <div class="top"><strong>Fonti</strong><span class="pill">link citabili</span></div>
-      <ul>
-        <li><a href="https://www.agenziaentrate.gov.it/portale/web/guest/schede/fabbricatiterreni/omi/banche-dati/quotazioni-immobiliari" target="_blank" rel="noreferrer">Agenzia delle Entrate – OMI, Quotazioni immobiliari</a></li>
-        <li><a href="https://www1.agenziaentrate.gov.it/servizi/Consultazione/ricerca.htm?level=0" target="_blank" rel="noreferrer">Banca dati OMI – ricerca</a></li>
-        <li><a href="https://www.istat.it/" target="_blank" rel="noreferrer">ISTAT</a></li>
-      </ul>
-      <p>Nota: la query live va implementata nel backend; questa UI è già pronta a consumarla.</p>
+      <ul id="sourcesList"></ul>
+      <p>Nota: il backend restituisce le fonti online insieme al risultato della query.</p>
     </div>
   </div>
 </div>
 <script>
-const datasets = {
-  'Bologna|Via Indipendenza': [[2016,28.0,4300],[2017,28.5,4400],[2018,29.0,4550],[2019,29.5,4700],[2020,28.5,4550],[2021,29.0,4700],[2022,30.0,4900],[2023,31.0,5100],[2024,31.5,5250],[2025,32.0,5400]],
-  'Bologna|Centro Storico': [[2016,24.0,3800],[2017,24.5,3900],[2018,25.0,4000],[2019,25.5,4100],[2020,24.5,3950],[2021,25.0,4050],[2022,26.0,4200],[2023,27.0,4400],[2024,27.5,4500],[2025,28.0,4650]],
-  'Bologna|Strada Maggiore': [[2016,21.0,3300],[2017,21.2,3400],[2018,21.5,3450],[2019,22.0,3550],[2020,21.5,3450],[2021,22.0,3550],[2022,23.0,3700],[2023,23.5,3850],[2024,24.0,3950],[2025,24.5,4100]],
-};
 let chartSale, chartRent;
 const fmt = n => new Intl.NumberFormat('it-IT',{maximumFractionDigits:1}).format(n);
 const fmt2 = n => new Intl.NumberFormat('it-IT').format(Math.round(n));
-function build(key){
-  const rows = datasets[key] || datasets[(document.getElementById('city').value.trim() || 'Bologna') + '|Via Indipendenza'] || datasets['Bologna|Via Indipendenza'];
+async function refresh(){
+  const city = document.getElementById('city').value.trim() || 'Bologna';
+  const street = document.getElementById('street').value.trim() || 'Via Indipendenza';
+  document.getElementById('queryInfo').textContent = 'Ricerca in corso per: ' + city + ' — ' + street;
+  const res = await fetch(`/api/omi?city=${encodeURIComponent(city)}&street=${encodeURIComponent(street)}`);
+  const data = await res.json();
+  const rows = data.result.rows;
   const years = rows.map(r=>r[0]), rent = rows.map(r=>r[1]), sale = rows.map(r=>r[2]);
   const dr = rent.at(-1)-rent[0], ds = sale.at(-1)-sale[0];
   const avgRent = rent.reduce((a,b)=>a+b,0)/rent.length, avgSale = sale.reduce((a,b)=>a+b,0)/sale.length;
-  document.getElementById('rent2025').textContent = fmt(rent.at(-1)) + ' €/mq/mese';
-  document.getElementById('sale2025').textContent = fmt2(sale.at(-1)) + ' €/mq';
+  document.getElementById('rent2025').textContent = fmt(data.result.rent2025) + ' €/mq/mese';
+  document.getElementById('sale2025').textContent = fmt2(data.result.sale2025) + ' €/mq';
   document.getElementById('avg10').textContent = fmt(avgRent) + ' / ' + fmt2(avgSale);
   document.getElementById('rentDelta').textContent = (dr>0?'+':'') + fmt(dr) + ' dal 2016';
   document.getElementById('saleDelta').textContent = (ds>0?'+':'') + fmt2(ds) + ' dal 2016';
@@ -85,9 +81,10 @@ function build(key){
   if(chartSale) chartSale.destroy(); if(chartRent) chartRent.destroy();
   chartSale = new Chart(document.getElementById('chartSale'),{type:'line',data:{labels:years,datasets:[{label:'Prezzo medio (€/mq)',data:sale,borderColor:'#ffb56b',backgroundColor:'rgba(255,181,107,.10)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
   chartRent = new Chart(document.getElementById('chartRent'),{type:'line',data:{labels:years,datasets:[{label:'Canone medio (€/mq/mese)',data:rent,borderColor:'#ff8a5b',backgroundColor:'rgba(255,138,91,.12)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
+  const src = document.getElementById('sourcesList'); src.innerHTML='';
+  data.sources.forEach(s => { const li = document.createElement('li'); li.innerHTML = `<a href="${s.url}" target="_blank" rel="noreferrer">${s.name}</a>`; src.appendChild(li); });
+  document.getElementById('queryInfo').textContent = `Risultato per: ${data.query.city} — ${data.query.street} · ${data.result.note}`;
 }
-function keyFromForm(){ return (document.getElementById('city').value.trim() || 'Bologna') + '|' + (document.getElementById('street').value.trim() || 'Via Indipendenza'); }
-function refresh(){ const key = keyFromForm(); const has = !!datasets[key]; document.getElementById('queryInfo').textContent = has ? ('Ricerca aggiornata per: ' + key.replace('|',' — ')) : ('Nessun dataset puntuale per ' + key.replace('|',' — ') + '. Fallback prudente attivo.'); build(key); }
 document.getElementById('searchBtn').addEventListener('click', refresh);
 document.getElementById('street').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
 document.getElementById('city').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
