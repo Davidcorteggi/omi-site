@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/omi", "dest": "/api/omi.py" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
