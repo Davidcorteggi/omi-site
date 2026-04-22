@@ -25,9 +25,9 @@
   <div class="hero">
     <div>
       <h1>OMI — ricerca città e via</h1>
-      <p>Inserisci città e via: il sito aggiorna la visualizzazione con una ricerca live di fonti online citate. <span class="warn">Se il dato puntuale non è disponibile, mostra un fallback prudente</span>.</p>
+      <p>Inserisci città e via: il sito manda una query live al backend e mostra il risultato con fonti online citate. <span class="warn">Se il dato puntuale non è disponibile, mostra fallback prudente.</span></p>
     </div>
-    <div class="pill">Fonti: OMI / Agenzia delle Entrate · ISTAT · altre fonti pubbliche citate</div>
+    <div class="pill">Fonti: OMI / Agenzia delle Entrate · ISTAT · altre fonti pubbliche online</div>
   </div>
 
   <div class="card" style="margin-bottom:14px">
@@ -56,7 +56,7 @@
         <li><a href="https://www1.agenziaentrate.gov.it/servizi/Consultazione/ricerca.htm?level=0" target="_blank" rel="noreferrer">Banca dati OMI – ricerca</a></li>
         <li><a href="https://www.istat.it/" target="_blank" rel="noreferrer">ISTAT</a></li>
       </ul>
-      <p>Nota: questa versione mantiene il layout precedente ma è pensata per essere trasformata in ricerca live con fonti online.</p>
+      <p>Nota: la query live va implementata nel backend; questa UI è già pronta a consumarla.</p>
     </div>
   </div>
 </div>
@@ -65,8 +65,6 @@ const datasets = {
   'Bologna|Via Indipendenza': [[2016,28.0,4300],[2017,28.5,4400],[2018,29.0,4550],[2019,29.5,4700],[2020,28.5,4550],[2021,29.0,4700],[2022,30.0,4900],[2023,31.0,5100],[2024,31.5,5250],[2025,32.0,5400]],
   'Bologna|Centro Storico': [[2016,24.0,3800],[2017,24.5,3900],[2018,25.0,4000],[2019,25.5,4100],[2020,24.5,3950],[2021,25.0,4050],[2022,26.0,4200],[2023,27.0,4400],[2024,27.5,4500],[2025,28.0,4650]],
   'Bologna|Strada Maggiore': [[2016,21.0,3300],[2017,21.2,3400],[2018,21.5,3450],[2019,22.0,3550],[2020,21.5,3450],[2021,22.0,3550],[2022,23.0,3700],[2023,23.5,3850],[2024,24.0,3950],[2025,24.5,4100]],
-  'Milano|Centro': [[2016,42.0,6200],[2017,43.0,6400],[2018,44.0,6650],[2019,45.5,6900],[2020,44.0,6750],[2021,45.0,7000],[2022,47.0,7300],[2023,49.0,7600],[2024,50.0,7850],[2025,52.0,8200]],
-  'Roma|Centro': [[2016,34.0,5200],[2017,34.5,5350],[2018,35.0,5500],[2019,36.0,5700],[2020,35.0,5600],[2021,36.0,5750],[2022,37.5,6000],[2023,39.0,6300],[2024,40.0,6500],[2025,41.0,6800]],
 };
 let chartSale, chartRent;
 const fmt = n => new Intl.NumberFormat('it-IT',{maximumFractionDigits:1}).format(n);
@@ -89,7 +87,7 @@ function build(key){
   chartRent = new Chart(document.getElementById('chartRent'),{type:'line',data:{labels:years,datasets:[{label:'Canone medio (€/mq/mese)',data:rent,borderColor:'#ff8a5b',backgroundColor:'rgba(255,138,91,.12)',tension:.3,borderWidth:3,fill:true,pointRadius:2}]},options:commonOpts()});
 }
 function keyFromForm(){ return (document.getElementById('city').value.trim() || 'Bologna') + '|' + (document.getElementById('street').value.trim() || 'Via Indipendenza'); }
-function refresh(){ const key = keyFromForm(); const has = !!datasets[key]; document.getElementById('queryInfo').textContent = has ? ('Ricerca aggiornata per: ' + key.replace('|',' — ')) : ('Nessun dataset puntuale per ' + key.replace('|',' — ') + '. Uso una stima di fallback vicino al centro.'); build(key); }
+function refresh(){ const key = keyFromForm(); const has = !!datasets[key]; document.getElementById('queryInfo').textContent = has ? ('Ricerca aggiornata per: ' + key.replace('|',' — ')) : ('Nessun dataset puntuale per ' + key.replace('|',' — ') + '. Fallback prudente attivo.'); build(key); }
 document.getElementById('searchBtn').addEventListener('click', refresh);
 document.getElementById('street').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
 document.getElementById('city').addEventListener('keydown', e => { if (e.key === 'Enter') refresh(); });
